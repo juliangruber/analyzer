@@ -23,14 +23,6 @@ getUserMedia({ audio: true }, function(err, stream) {
     console.log('float frequency data', chunk);
   });
   
-  analyzer.on('byte frequency data', function(chunk) {
-    console.log('byte frequency data', chunk);
-  });
-  
-  analyzer.on('byte time domain data', function(chunk) {
-    console.log('byte time domain data', chunk);
-  });
-  
   setTimeout(function() {
     analyzer.pause();
     console.log('ended processing');
