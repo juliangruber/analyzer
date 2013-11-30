@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>analyzer-node</title>
+</head>
+<body>
+  <script src="build/build.js"></script>
+  <script>
+
+    var Analyzer = require('analyzer');
+    var getUserMedia = require('get-user-media');
+    var Context = window.audioContext || window.webkitAudioContext;
+    
+    getUserMedia({ audio: true }, function(err, stream) {
+      if (err) throw err;
+      
+      var ctx = new Context;
+      var src = ctx.createMediaStreamSource(stream);
+      var analyzer = window.analyzer = new Analyzer(src);
+      
+      analyzer.on('float frequency data', function(chunk) {
+        console.log('float frequency data', chunk);
+      });
+      
+      analyzer.on('byte frequency data', function(chunk) {
+        console.log('byte frequency data', chunk);
+      });
+      
+      analyzer.on('byte time domain data', function(chunk) {
+        console.log('byte time domain data', chunk);
+      });
+      
+      setTimeout(function() {
+        analyzer.pause();
+        console.log('ended processing');
+      }, 1000);
+    });
+
+  </script>
+</body>
+</html>
