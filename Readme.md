@@ -9,24 +9,11 @@
 
 ```js
 var Analyzer = require('analyzer');
-var getUserMedia = require('get-user-media');
-var Context = window.audioContext || window.webkitAudioContext;
 
-getUserMedia({ audio: true }, function(err, stream) {
-  if (err) throw err;
-  
-  var ctx = new Context;
-  var src = ctx.createMediaStreamSource(stream);
-  var analyzer = window.analyzer = new Analyzer(src);
-  
-  analyzer.on('float frequency data', function(chunk) {
-    console.log('float frequency data', chunk);
-  });
-  
-  setTimeout(function() {
-    analyzer.pause();
-    console.log('ended processing');
-  }, 1000);
+var analyzer = new Analyzer(sourceNode);
+
+analyzer.on('float frequency data', function(chunk) {
+  console.log('float frequency data', chunk);
 });
 ```
 
