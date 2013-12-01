@@ -17,7 +17,8 @@
       
       var ctx = new Context;
       var src = ctx.createMediaStreamSource(stream);
-      var analyzer = window.analyzer = new Analyzer(src);
+      var analyzer = new Analyzer();
+      src.connect(analyzer.node);
       
       analyzer.on('float frequency data', function(chunk) {
         console.log('float frequency data', chunk);

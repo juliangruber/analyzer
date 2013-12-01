@@ -5,7 +5,6 @@ module.exports = Analyzer;
 /**
  * WebAudio analyzer.
  *
- * @param {Node} src
  * @return {Analyzer}
  * @api public
  */
@@ -15,11 +14,10 @@ function Analyzer(src) {
   this.analyzer = this.ctx.createAnalyser();
   this.analyzer.fftSize = 2048;
   this.processor = this.ctx.createJavaScriptNode(1024);
-  
-  src.connect(this.analyzer)
   this.analyzer.connect(this.processor);
   this.processor.connect(this.ctx.destination);
   
+  this.node = this.analyzer;
   this.smoothing(0);
   this.resume();
 }
