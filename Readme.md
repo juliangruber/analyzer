@@ -1,7 +1,7 @@
 
 # analyzer
 
-  A WebAudio analyzer that does all the nasty plumbing with `JavaScriptSourceNode`s and `AnalyzerNode`s for you.
+  A multi channel WebAudio analyzer that does all the nasty plumbing with `JavaScriptSourceNode`s and `AnalyzerNode`s for you.
 
 ## Example
 
@@ -12,12 +12,13 @@ var Analyzer = require('analyzer');
 var AudioContext = window.audioContext || window.webkitAudioContext;
 
 var context = new AudioContext();
-var analyzer = new Analyzer(context);
-
-sourceNode.connect(analyzer.node);
+var analyzer = Analyzer(context)
+  .add('left', source, 0)
+  .add('right', source, 1);
 
 analyzer.on('float frequency data', function(chunk) {
   console.log('float frequency data', chunk);
+  // { left: [ ... ], right: [ ... ] }
 });
 ```
 
@@ -31,17 +32,17 @@ $ component install juliangruber/analyzer
 
 ## API
 
-### Analyzer(ctx)
+### Analyzer([opts, ]ctx)
 
   Create a new `Analyzer` for the WebAudio `context`. Inherits from [component/emitter](https://github.com/component/emitter).
 
-### Analyzer#node
+  Possible options:
+  
+  * `smoothing`: The smoothing time constant, can be between 0 and 1.
 
-The AudioNode that you need to connect the node you want to analyze to.
+### Analyzer#add(name, node[, channel])
 
-### Analyzer#smoothing(amount)
-
-  Set the smoothing time constant to `amount` which must be an integer from `0` to `1`. The bigger, the more smoothing. `0` disables smoothing completely. Defaults to `0`.
+  Start analyzing `node` and expose it in events under `name`. `channel` is the output channel you care about and defaults to `0`.
 
 ### Analyzer#resume()
 

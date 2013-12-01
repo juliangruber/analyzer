@@ -10,33 +10,39 @@ module.exports = Analyzer;
  * @api public
  */
 
-function Analyzer(ctx) {
+function Analyzer(ctx, opts) {
+  if (!(this instanceof Analyzer)) return new Analyzer(ctx, opts);
+  if (!opts) opts = {};
   this.ctx = ctx;
-  this.analyzer = ctx.createAnalyser();
-  this.analyzer.fftSize = 2048;
   this.processor = ctx.createJavaScriptNode(1024);
   this.processor.onaudioprocess = this.process.bind(this);
-  this.node = this.analyzer;
-  this.smoothing(0);
+  this.analyzers = {};
+  this.smoothing = opts.smoothing || 0;
   this.resume();
 }
 
 Emitter(Analyzer.prototype);
 
 /**
- * Set the smoothing time constant to `amount`,
- * which must be between 0 and 1.
+ * Analyze `node`.
  *
- * @param {Number} amount
+ * @param {String} name
+ * @param {AudioNode} node
+ * @param {Number=} channel
  * @return {Analyzer}
  * @api public
  */
 
-Analyzer.prototype.smoothing = function(amount) {
-  if (amount < 0 || amount > 1) {
-    throw new TypeError('amount must be between 0 and 1');
-  }
-  this.analyzer.smoothingTimeConstant = amount;
+Analyzer.prototype.add = function(name, node, channel) {
+  var analyzer = this.ctx.createAnalyser();
+  analyzer.fftSize = 2048;
+  analyzer.smoothingTimeConstant = this.smoothing;
+  
+  if (Object.keys(this.analyzers).length == 0) node.connect(this.processor);
+  node.connect(analyzer, channel || 0);
+  
+  this.analyzers[name] = analyzer;
+  
   return this;
 };
 
@@ -48,7 +54,6 @@ Analyzer.prototype.smoothing = function(amount) {
  */
 
 Analyzer.prototype.resume = function() {
-  this.analyzer.connect(this.processor);
   this.processor.connect(this.ctx.destination);
   return this;
 };
@@ -61,7 +66,6 @@ Analyzer.prototype.resume = function() {
  */
 
 Analyzer.prototype.pause = function() {
-  this.analyzer.disconnect();
   this.processor.disconnect();
   return this;  
 };
@@ -73,21 +77,49 @@ Analyzer.prototype.pause = function() {
  */
 
 Analyzer.prototype.process = function() {
+  var analyzers = this.analyzers;
+  
   if (this.listeners('float frequency data').length) {
-    var chunk = new Float32Array(this.analyzer.frequencyBinCount);
-    this.analyzer.getFloatFrequencyData(chunk);
-    this.emit('float frequency data', chunk);
+    var channels = {};
+    each(analyzers, function(analyzer, name) {
+      var chunk = new Float32Array(analyzer.frequencyBinCount);
+      analyzer.getFloatFrequencyData(chunk);
+      channels[name] = chunk;
+    });
+    this.emit('float frequency data', channels);
   }
   
   if (this.listeners('byte frequency data').length) {
-    var chunk = new Uint8Array(this.analyzer.frequencyBinCount);
-    this.analyzer.getByteFrequencyData(chunk);
-    this.emit('byte frequency data', chunk);
+    var channels = {};
+    each(analyzers, function(analyzer, name) {
+      var chunk = new Uint8Array(analyzer.frequencyBinCount);
+      analyzer.getByteFrequencyData(chunk);
+      channels[name] = chunk;
+    });
+    this.emit('byte frequency data', channels);
   }
-  
+
   if (this.listeners('byte time domain data').length) {
-    var chunk = new Uint8Array(this.analyzer.fftSize);
-    this.analyzer.getByteTimeDomainData(chunk);
-    this.emit('byte time domain data', chunk);
+    var channels = {};
+    each(analyzers, function(analyzer, name) {
+      var chunk = new Uint8Array(analyzer.fftSize);
+      analyzer.getByteTimeDomainData(chunk);
+      channels[name] = chunk;
+    });
+    this.emit('byte time domain data', channels);
   }
 };
+
+/**
+ * Object iteration utility.
+ *
+ * @param {Object} obj
+ * @param {Function} fn
+ * @api private
+ */
+
+function each(obj, fn) {
+  Object.keys(obj).forEach(function(key) {
+    fn(obj[key], key);
+  });
+}

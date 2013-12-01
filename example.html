@@ -16,20 +16,19 @@
       if (err) throw err;
       
       var ctx = new Context;
-      var src = ctx.createMediaStreamSource(stream);
-      var analyzer = new Analyzer(ctx);
-      src.connect(analyzer.node);
+      var mic = ctx.createMediaStreamSource(stream);
+      var analyzer = Analyzer(ctx).add('mic', mic);
       
-      analyzer.on('float frequency data', function(chunk) {
-        console.log('float frequency data', chunk);
+      analyzer.on('float frequency data', function(data) {
+        console.log('float frequency data', data.mic);
       });
       
-      analyzer.on('byte frequency data', function(chunk) {
-        console.log('byte frequency data', chunk);
+      analyzer.on('byte frequency data', function(data) {
+        console.log('byte frequency data', data.mic);
       });
       
-      analyzer.on('byte time domain data', function(chunk) {
-        console.log('byte time domain data', chunk);
+      analyzer.on('byte time domain data', function(data) {
+        console.log('byte time domain data', data.mic);
       });
       
       setTimeout(function() {
