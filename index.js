@@ -5,18 +5,17 @@ module.exports = Analyzer;
 /**
  * WebAudio analyzer.
  *
+ * @param {Context} ctx
  * @return {Analyzer}
  * @api public
  */
 
-function Analyzer(src) {
-  this.ctx = src.context;
-  this.analyzer = this.ctx.createAnalyser();
+function Analyzer(ctx) {
+  this.ctx = ctx;
+  this.analyzer = ctx.createAnalyser();
   this.analyzer.fftSize = 2048;
-  this.processor = this.ctx.createJavaScriptNode(1024);
-  this.analyzer.connect(this.processor);
-  this.processor.connect(this.ctx.destination);
-  
+  this.processor = ctx.createJavaScriptNode(1024);
+  this.processor.onaudioprocess = this.process.bind(this);
   this.node = this.analyzer;
   this.smoothing(0);
   this.resume();
@@ -49,31 +48,9 @@ Analyzer.prototype.smoothing = function(amount) {
  */
 
 Analyzer.prototype.resume = function() {
-  var self = this;
-  self.running = true;
-  self.processor.onaudioprocess = function() {
-    if (!self.running) return self.processor.onaudioprocess = null;
-    
-    if (self.listeners('float frequency data').length) {
-      var chunk = new Float32Array(self.analyzer.frequencyBinCount);
-      self.analyzer.getFloatFrequencyData(chunk);
-      self.emit('float frequency data', chunk);
-    }
-    
-    if (self.listeners('byte frequency data').length) {
-      var chunk = new Uint8Array(self.analyzer.frequencyBinCount);
-      self.analyzer.getByteFrequencyData(chunk);
-      self.emit('byte frequency data', chunk);
-    }
-    
-    if (self.listeners('byte time domain data').length) {
-      var chunk = new Uint8Array(self.analyzer.fftSize);
-      self.analyzer.getByteTimeDomainData(chunk);
-      self.emit('byte time domain data', chunk);
-    }
-  };
-  
-  return self;
+  this.analyzer.connect(this.processor);
+  this.processor.connect(this.ctx.destination);
+  return this;
 };
 
 /**
@@ -82,8 +59,35 @@ Analyzer.prototype.resume = function() {
  * @return {Analyzer}
  * @api public
  */
- 
+
 Analyzer.prototype.pause = function() {
-  this.running = false;
-  return this;
+  this.analyzer.disconnect();
+  this.processor.disconnect();
+  return this;  
+};
+
+/**
+ * Onaudioprocess callback.
+ *
+ * @api private
+ */
+
+Analyzer.prototype.process = function() {
+  if (this.listeners('float frequency data').length) {
+    var chunk = new Float32Array(this.analyzer.frequencyBinCount);
+    this.analyzer.getFloatFrequencyData(chunk);
+    this.emit('float frequency data', chunk);
+  }
+  
+  if (this.listeners('byte frequency data').length) {
+    var chunk = new Uint8Array(this.analyzer.frequencyBinCount);
+    this.analyzer.getByteFrequencyData(chunk);
+    this.emit('byte frequency data', chunk);
+  }
+  
+  if (this.listeners('byte time domain data').length) {
+    var chunk = new Uint8Array(this.analyzer.fftSize);
+    this.analyzer.getByteTimeDomainData(chunk);
+    this.emit('byte time domain data', chunk);
+  }
 };
