@@ -11,12 +11,16 @@ module.exports = Analyzer;
  */
 
 function Analyzer(src) {
-  this.analyzer = src.context.createAnalyser();
+  this.ctx = src.context;
+  this.analyzer = this.ctx.createAnalyser();
+  this.analyzer.fftSize = 2048;
+  this.processor = this.ctx.createJavaScriptNode(1024);
+  
+  src.connect(this.analyzer)
+  this.analyzer.connect(this.processor);
+  this.processor.connect(this.ctx.destination);
+  
   this.smoothing(0);
-  this.fftSize(2048);  
-  var binCount = this.analyzer.frequencyBinCount;
-  this.processor = src.context.createJavaScriptNode(binCount);
-  this.processor.connect(src.context.destination);
   this.resume();
 }
 
@@ -36,22 +40,6 @@ Analyzer.prototype.smoothing = function(amount) {
     throw new TypeError('amount must be between 0 and 1');
   }
   this.analyzer.smoothingTimeConstant = amount;
-  return this;
-};
-
-/**
- * Set the analyzer's `fftSize`.
- *
- * @param {Number fftSize}
- * @return {Analyzer}
- * @api public
- */
-
-Analyzer.prototype.fftSize = function(fftSize) {
-  if (fftSize <= 0 || fftSize % 2) {
-    throw new TypeError('fftSize must be a positive power of 2');
-  }
-  this.analyzer.fftSize = fftSize;
   return this;
 };
 

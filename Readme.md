@@ -35,10 +35,6 @@ $ component install juliangruber/analyzer
 
   Set the smoothing time constant to `amount` which must be an integer from `0` to `1`. The bigger, the more smoothing. `0` disables smoothing completely. Defaults to `0`.
 
-### Analyzer#fftSize(size)
-
-  Set the internal `fftSize` which controls how many samples are processed at a time. Must be a positive power of 2. Defaults to `2048`.
-
 ### Analyzer#resume()
 
   Resume analyzing.
