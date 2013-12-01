@@ -8,3 +8,9 @@
 
 * Remove fftSize setting
 * Expose .node instead of taking the source as an argument
+
+0.2.0 / 2013-12-01
+==================
+
+* Move smoothing option to options object
+* Add .add(name, node, channel) and deprecate .node

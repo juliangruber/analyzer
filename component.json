@@ -2,7 +2,7 @@
   "name": "analyzer",
   "repo": "juliangruber/analyzer",
   "description": "A WebAudio analyzer node",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "keywords": [],
   "dependencies": {
     "component/emitter": "*"
