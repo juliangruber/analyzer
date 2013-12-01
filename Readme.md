@@ -9,8 +9,12 @@
 
 ```js
 var Analyzer = require('analyzer');
+var AudioContext = window.audioContext || window.webkitAudioContext;
 
-var analyzer = new Analyzer(sourceNode);
+var context = new AudioContext();
+var analyzer = new Analyzer(context);
+
+sourceNode.connect(analyzer.node);
 
 analyzer.on('float frequency data', function(chunk) {
   console.log('float frequency data', chunk);
@@ -27,9 +31,13 @@ $ component install juliangruber/analyzer
 
 ## API
 
-### Analyzer(source)
+### Analyzer(ctx)
 
-  Create a new `Analyzer` for the `source` node. Inherits from [component/emitter](https://github.com/component/emitter).
+  Create a new `Analyzer` for the WebAudio `context`. Inherits from [component/emitter](https://github.com/component/emitter).
+
+### Analyzer#node
+
+The AudioNode that you need to connect the node you want to analyze to.
 
 ### Analyzer#smoothing(amount)
 
